@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Yoga Youtube Video</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        a {
+            text-decoration: none;
+        }
+        .youtube-button {
+            padding: 20px 40px;
+            font-size: 24px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .youtube-button:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="button-container">
+        <a id="youtube-link" href="" target="_blank">
+            <button class="youtube-button">Go to YouTube</button>
+        </a>
+    </div>
+
+    <script>
+        const videoUrls = [
+            'https://www.youtube.com/watch?v=FvaE0KofQEA',
+            'https://www.youtube.com/watch?v=WltkvVB_lfM',
+            'https://www.youtube.com/watch?v=fXOz09pxoiM',
+        ];
+
+        function getRandomVideoUrl() {
+            const randomIndex = Math.floor(Math.random() * videoUrls.length);
+            return videoUrls[randomIndex];
+        }
+
+        document.getElementById('youtube-link').href = getRandomVideoUrl();
+    </script>
+
+</body>
+</html>
+
+

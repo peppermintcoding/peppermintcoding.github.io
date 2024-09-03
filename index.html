@@ -1,181 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hex Color Guesser</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f0f0f0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <style>
+        header {
+            background-color: #333;
+            color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+        }
 
-    .game-container {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
+        header a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 18px;
+        }
 
-    h1 {
-      margin-top: 0;
-    }
-
-    .color-display {
-      width: 200px;
-      height: 200px;
-      margin-bottom: 1rem;
-    }
-
-    .color-container {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-
-    .input-container {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-
-    input {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin-right: 0.5rem;
-    }
-
-    button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background-color: #535555;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 0.25rem;
-    }
-
-    .result {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-    }
-
-    .score {
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-  </style>
+        header a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <div class="game-container">
-    <h1>Hex Color Guesser</h1>
-    <div class="color-container">
-      <div class="color-display" id="color-display"></div>
-      <div class="color-display" id="user-color-display"></div>
-    </div>
-    <div class="input-container">
-      <input type="text" id="guess-input" placeholder="enter hex without #" />
-      <button onclick="checkGuess()">Guess</button>
-      <button onclick="genNewColor()">New Color</button>
-    </div>
-    <div class="result" id="result"></div>
-    <div class="score" id="score">Score: 0</div>
-  </div>
-
-  <script>
-    function generateRandomColor() {
-      const red = Math.floor(Math.random() * 256);
-      const green = Math.floor(Math.random() * 256);
-      const blue = Math.floor(Math.random() * 256);
-      return {
-        hex: `#${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue.toString(16).padStart(2, '0')}`,
-        rgb: [red, green, blue]
-      };
-    }
-
-    function calculateColorDifference(actual, guess) {
-      const redDiff = Math.abs(actual[0] - guess[0]);
-      const greenDiff = Math.abs(actual[1] - guess[1]);
-      const blueDiff = Math.abs(actual[2] - guess[2]);
-      return redDiff + greenDiff + blueDiff;
-    }
-
-    let score = 0;
-    let tries = 5;
-    document.getElementById('result').textContent = `you have ${tries} tries remaining..`;
-    let randomColor = generateRandomColor();
-    document.getElementById('color-display').style.backgroundColor = randomColor.hex;
-    var inputField = document.getElementById("guess-input");
-    inputField.addEventListener("keydown", function (e) {
-        if (e.code === "Enter") {  //checks whether the pressed key is "Enter"
-            checkGuess();
-        }
-    });
-
-    function checkGuess() {
-      if (tries == 0) { return }
-      tries -= 1;
-      const guessInput = document.getElementById('guess-input');
-      const guess = guessInput.value.trim();
-      let guessRGB;
-      let guessHex;
-
-      if (guess.length == 6) {
-        guessRGB = [
-          parseInt(guess.slice(0, 2), 16),
-          parseInt(guess.slice(2, 4), 16),
-          parseInt(guess.slice(4, 6), 16)
-        ];
-        guessHex = `#${guessRGB[0].toString(16).padStart(2, '0')}${guessRGB[1].toString(16).padStart(2, '0')}${guessRGB[2].toString(16).padStart(2, '0')}`;
-      } else {
-          document.getElementById('result').textContent = 'Invalid input. Please enter a valid hex value.';
-          return;
-        }
-      
-      document.getElementById("user-color-display").style.backgroundColor = guessHex;
-      const colorDiff = calculateColorDifference(randomColor.rgb, guessRGB);
-      score = (255*3 - colorDiff) / (255*3) * 100;
-      document.getElementById('score').textContent = `Score: ${score.toFixed(1)}%`;
-      message = getHelpMessage(randomColor.rgb, guessRGB)
-      if (tries == 0) {
-        document.getElementById('result').textContent = `Actual color: ${randomColor.hex} | Your color: ${guessHex}`;
-      } else {
-        document.getElementById('result').textContent = message;
-      }
-    }
-
-    function getHelpMessage(randomRGB, guessRGB) {
-      if (tries == 0) {
-        return `(0/5) you used up all your tries`
-      }
-      let messages = [];
-      ["red", "green", "blue"].forEach((color, i) => {
-        let diff = randomRGB[i] - guessRGB[i];
-        if (diff > 0) {
-          messages.push(`a little more ${color} maybe..`);
-        } 
-        else if (diff < 0) {
-          messages.push(`a little less ${color} maybe..`);
-        }
-      });
-      return `(${tries}/5) ${messages[Math.floor(Math.random() * messages.length)]}`;
-    }
-
-    function genNewColor() {
-      randomColor = generateRandomColor();
-      document.getElementById('color-display').style.backgroundColor = randomColor.hex;
-      guessInput.value = '';
-      tries = 5;
-      document.getElementById('result').textContent = `you have ${tries} tries remaining..`;
-    }
-  </script>
+    <header>
+        <a href="color_guesser_game.html">color guessing game</a>
+        <a href="random_yoga_video.html">random yoga video</a>
+    </header>
 </body>
 </html>
