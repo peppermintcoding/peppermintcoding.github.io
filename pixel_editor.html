@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Pixel Art Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #FAF3E0;
+      font-family: "Nunito Sans", sans-serif;
+      font-size: 16px;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      gap: 20px;
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .palette {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .palette-item-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    .palette-item-container:hover { background: #f0f0f0; }
+    .palette-item-container.selected { background: #eaf8e0; }
+    .palette-swatch {
+      width: 40px;
+      height: 40px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+    }
+    .palette-item-container.selected .palette-swatch { border-color: #FF6F81; }
+    .edit-button {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: #E0E4CC;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+    .edit-button:hover { background: #D0D4BA; }
+    canvas {
+      image-rendering: pixelated;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      border: none;
+    }
+    button#saveButton {
+      padding: 10px 20px;
+      border: none;
+      background-color: #FF9A9E;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.3s;
+      font-weight: 600;
+    }
+    button#saveButton:hover { background-color: #FF6F81; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="palette" id="colorPalette"></div>
+      <button id="saveButton">Save PNG</button>
+    </div>
+    <canvas id="pixelCanvas" width="640" height="640"></canvas>
+  </div>
+  <script>
+    const canvas = document.getElementById("pixelCanvas");
+    const ctx = canvas.getContext("2d");
+    const gridWidth = 80, gridHeight = 80, cellSize = 8;
+    let pixelColors = Array.from({ length: gridHeight }, () => Array(gridWidth).fill("#ffffff"));
+    let currentColor = "#000000";
+    const colorPaletteElement = document.getElementById("colorPalette");
+
+    function drawCanvas() {
+      for (let row = 0; row < gridHeight; row++) {
+        for (let col = 0; col < gridWidth; col++) {
+          ctx.fillStyle = pixelColors[row][col];
+          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+      ctx.strokeStyle = "#ccc";
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= gridWidth; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, canvas.height);
+        ctx.stroke();
+      }
+      for (let j = 0; j <= gridHeight; j++) {
+        ctx.beginPath();
+        ctx.moveTo(0, j * cellSize);
+        ctx.lineTo(canvas.width, j * cellSize);
+        ctx.stroke();
+      }
+    }
+
+    function drawPixelAt(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const col = Math.floor(x / cellSize);
+      const row = Math.floor(y / cellSize);
+      if (row >= 0 && row < gridHeight && col >= 0 && col < gridWidth) {
+        pixelColors[row][col] = currentColor;
+        ctx.fillStyle = currentColor;
+        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        ctx.strokeStyle = "#ccc";
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+      }
+    }
+
+    let isDrawing = false;
+    canvas.addEventListener("mousedown", event => {
+      isDrawing = true;
+      drawPixelAt(event);
+    });
+    canvas.addEventListener("mousemove", event => {
+      if (isDrawing) drawPixelAt(event);
+    });
+    document.addEventListener("mouseup", () => {
+      isDrawing = false;
+    });
+
+    function createPaletteItem(defaultColor) {
+      const container = document.createElement("div");
+      container.classList.add("palette-item-container");
+
+      const swatch = document.createElement("div");
+      swatch.classList.add("palette-swatch");
+      swatch.style.backgroundColor = defaultColor;
+
+      const editButton = document.createElement("button");
+      editButton.classList.add("edit-button");
+      editButton.textContent = "✎";
+
+      const colorPicker = document.createElement("input");
+      colorPicker.type = "color";
+      colorPicker.value = defaultColor;
+      colorPicker.style.display = "none";
+
+      swatch.addEventListener("click", () => {
+        document.querySelectorAll(".palette-item-container").forEach(item => item.classList.remove("selected"));
+        container.classList.add("selected");
+        currentColor = colorPicker.value;
+      });
+
+      editButton.addEventListener("click", e => {
+        e.stopPropagation();
+        colorPicker.click();
+      });
+
+      colorPicker.addEventListener("input", e => {
+        swatch.style.backgroundColor = e.target.value;
+        if (container.classList.contains("selected")) {
+          currentColor = e.target.value;
+        }
+      });
+
+      container.appendChild(swatch);
+      container.appendChild(editButton);
+      container.appendChild(colorPicker);
+      return container;
+    }
+
+    function initializePalette() {
+      const defaultColors = ["#23232e", "#3a323c", "#6b5258", "#a37370", "#c27f6f", "#cca795", "#d7c1b4", "#ded0c7"];
+      defaultColors.forEach(color => {
+        const paletteItem = createPaletteItem(color);
+        colorPaletteElement.appendChild(paletteItem);
+      });
+      colorPaletteElement.firstChild.classList.add("selected");
+      currentColor = colorPaletteElement.firstChild.querySelector("input[type=color]").value;
+    }
+
+    document.getElementById("saveButton").addEventListener("click", () => {
+        const offscreenCanvas = document.createElement("canvas");
+        offscreenCanvas.width = canvas.width;
+        offscreenCanvas.height = canvas.height;
+        const offscreenCtx = offscreenCanvas.getContext("2d");
+        for (let row = 0; row < gridHeight; row++) {
+            for (let col = 0; col < gridWidth; col++) {
+            offscreenCtx.fillStyle = pixelColors[row][col];
+            offscreenCtx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+            }
+        }
+        const imageData = offscreenCanvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.download = "pixel-art.png";
+        downloadLink.href = imageData;
+        downloadLink.click();
+    });
+
+    initializePalette();
+    drawCanvas();
+  </script>
+</body>
+</html>
