@@ -19,9 +19,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100vw;
-      height: 100vh;
+      min-height: 100vh;
       gap: 20px;
+      padding: 20px;
     }
     .sidebar {
       display: flex;
@@ -69,14 +69,28 @@
       transition: background 0.3s;
     }
     .edit-button:hover { background: #D0D4BA; }
-    canvas {
-      image-rendering: pixelated;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
-      border: none;
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    button#saveButton {
+    .size-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .size-btn {
+      padding: 8px 12px;
+      border: none;
+      background-color: #FF9A9E;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.3s;
+      font-weight: 600;
+    }
+    .size-btn:hover { background-color: #FF6F81; }
+    #saveButton {
       padding: 10px 20px;
       border: none;
       background-color: #FF9A9E;
@@ -86,7 +100,20 @@
       transition: background 0.3s;
       font-weight: 600;
     }
-    button#saveButton:hover { background-color: #FF6F81; }
+    #saveButton:hover { background-color: #FF6F81; }
+    canvas {
+      image-rendering: pixelated;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      border: none;
+      max-width: 100%;
+      height: auto;
+    }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; align-items: center; }
+      canvas { width: 90vw; }
+    }
   </style>
 </head>
 <body>
@@ -95,46 +122,53 @@
       <div class="palette" id="colorPalette"></div>
       <button id="saveButton">Save PNG</button>
     </div>
-    <canvas id="pixelCanvas" width="640" height="640"></canvas>
+    <div class="canvas-container">
+      <div class="size-buttons">
+        <button class="size-btn" data-size="8">8x8</button>
+        <button class="size-btn" data-size="16">16x16</button>
+        <button class="size-btn" data-size="32">32x32</button>
+        <button class="size-btn" data-size="64">64x64</button>
+      </div>
+      <canvas id="pixelCanvas" width="640" height="640"></canvas>
+    </div>
   </div>
   <script>
     const canvas = document.getElementById("pixelCanvas");
     const ctx = canvas.getContext("2d");
-    const gridWidth = 80, gridHeight = 80, cellSize = 8;
-    let pixelColors = Array.from({ length: gridHeight }, () => Array(gridWidth).fill("#ffffff"));
+    let gridSize = 32;
+    let cellSize = canvas.width / gridSize;
+    let pixelColors = Array.from({ length: gridSize }, () => Array(gridSize).fill("#ffffff"));
     let currentColor = "#000000";
     const colorPaletteElement = document.getElementById("colorPalette");
-
     function drawCanvas() {
-      for (let row = 0; row < gridHeight; row++) {
-        for (let col = 0; col < gridWidth; col++) {
+      for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
           ctx.fillStyle = pixelColors[row][col];
           ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
         }
       }
       ctx.strokeStyle = "#ccc";
       ctx.lineWidth = 0.5;
-      for (let i = 0; i <= gridWidth; i++) {
+      for (let i = 0; i <= gridSize; i++) {
         ctx.beginPath();
         ctx.moveTo(i * cellSize, 0);
         ctx.lineTo(i * cellSize, canvas.height);
         ctx.stroke();
       }
-      for (let j = 0; j <= gridHeight; j++) {
+      for (let j = 0; j <= gridSize; j++) {
         ctx.beginPath();
         ctx.moveTo(0, j * cellSize);
         ctx.lineTo(canvas.width, j * cellSize);
         ctx.stroke();
       }
     }
-
     function drawPixelAt(event) {
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       const col = Math.floor(x / cellSize);
       const row = Math.floor(y / cellSize);
-      if (row >= 0 && row < gridHeight && col >= 0 && col < gridWidth) {
+      if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
         pixelColors[row][col] = currentColor;
         ctx.fillStyle = currentColor;
         ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
@@ -143,7 +177,6 @@
         ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
       }
     }
-
     let isDrawing = false;
     canvas.addEventListener("mousedown", event => {
       isDrawing = true;
@@ -155,48 +188,37 @@
     document.addEventListener("mouseup", () => {
       isDrawing = false;
     });
-
     function createPaletteItem(defaultColor) {
       const container = document.createElement("div");
       container.classList.add("palette-item-container");
-
       const swatch = document.createElement("div");
       swatch.classList.add("palette-swatch");
       swatch.style.backgroundColor = defaultColor;
-
       const editButton = document.createElement("button");
       editButton.classList.add("edit-button");
       editButton.textContent = "✎";
-
       const colorPicker = document.createElement("input");
       colorPicker.type = "color";
       colorPicker.value = defaultColor;
       colorPicker.style.display = "none";
-
       swatch.addEventListener("click", () => {
         document.querySelectorAll(".palette-item-container").forEach(item => item.classList.remove("selected"));
         container.classList.add("selected");
         currentColor = colorPicker.value;
       });
-
       editButton.addEventListener("click", e => {
         e.stopPropagation();
         colorPicker.click();
       });
-
       colorPicker.addEventListener("input", e => {
         swatch.style.backgroundColor = e.target.value;
-        if (container.classList.contains("selected")) {
-          currentColor = e.target.value;
-        }
+        if (container.classList.contains("selected")) currentColor = e.target.value;
       });
-
       container.appendChild(swatch);
       container.appendChild(editButton);
       container.appendChild(colorPicker);
       return container;
     }
-
     function initializePalette() {
       const defaultColors = ["#23232e", "#3a323c", "#6b5258", "#a37370", "#c27f6f", "#cca795", "#d7c1b4", "#ded0c7"];
       defaultColors.forEach(color => {
@@ -206,25 +228,31 @@
       colorPaletteElement.firstChild.classList.add("selected");
       currentColor = colorPaletteElement.firstChild.querySelector("input[type=color]").value;
     }
-
     document.getElementById("saveButton").addEventListener("click", () => {
-        const offscreenCanvas = document.createElement("canvas");
-        offscreenCanvas.width = canvas.width;
-        offscreenCanvas.height = canvas.height;
-        const offscreenCtx = offscreenCanvas.getContext("2d");
-        for (let row = 0; row < gridHeight; row++) {
-            for (let col = 0; col < gridWidth; col++) {
-            offscreenCtx.fillStyle = pixelColors[row][col];
-            offscreenCtx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-            }
+      const offscreenCanvas = document.createElement("canvas");
+      offscreenCanvas.width = canvas.width;
+      offscreenCanvas.height = canvas.height;
+      const offscreenCtx = offscreenCanvas.getContext("2d");
+      for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+          offscreenCtx.fillStyle = pixelColors[row][col];
+          offscreenCtx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
         }
-        const imageData = offscreenCanvas.toDataURL("image/png");
-        const downloadLink = document.createElement("a");
-        downloadLink.download = "pixel-art.png";
-        downloadLink.href = imageData;
-        downloadLink.click();
+      }
+      const imageData = offscreenCanvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = "pixel-art.png";
+      downloadLink.href = imageData;
+      downloadLink.click();
     });
-
+    document.querySelectorAll(".size-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        gridSize = parseInt(btn.getAttribute("data-size"));
+        cellSize = canvas.width / gridSize;
+        pixelColors = Array.from({ length: gridSize }, () => Array(gridSize).fill("#ffffff"));
+        drawCanvas();
+      });
+    });
     initializePalette();
     drawCanvas();
   </script>
