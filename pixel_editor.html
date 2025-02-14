@@ -164,13 +164,18 @@
     const ctx = canvas.getContext("2d");
     let gridSize = 32;
     let cellSize = canvas.width / gridSize;
-    let pixelColors = Array.from({ length: gridSize }, () => Array(gridSize).fill("#ffffff"));
+    let pixelColors = Array.from({ length: gridSize }, () => Array(gridSize).fill("#efefef"));
     let currentColor = "#000000";
     const colorPaletteElement = document.getElementById("colorPalette");
     const prebuiltPalettes = [
       ["#23232e", "#3a323c", "#6b5258", "#a37370", "#c27f6f", "#cca795", "#d7c1b4", "#ded0c7"],
-      ["#FF9A9E", "#FAD0C4", "#FFCFDF", "#A1C4FD", "#C2E9FB", "#D4FC79", "#96E6A1", "#84FAB0"],
-      ["#C1DFB5", "#FFE5AD", "#FFB7B2", "#FAD4D4", "#BDE0FE", "#FFBCBC", "#F5C7A9", "#BCEBFF"]
+      ["#1a1a1a", "#2a2a2a", "#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#ffeead", "#ff9999"],
+      ["#e6e6e6", "#d1d1d1", "#c2c2c2", "#b3b3b3", "#a4a4a4", "#9aa0a0", "#8b8b8b", "#7a7a7a"],
+      ["#1d2419", "#2d4a1d", "#436b24", "#65903c", "#8fb654", "#b4c292", "#d8dcc5", "#f0f2e6"],
+      ["#0f0f1b", "#1b1b33", "#ff2e97", "#6d22d8", "#2de2e6", "#f706cf", "#ff6b97", "#ffe561"],
+      ["#1a0f1f", "#432339", "#9b4f50", "#d77355", "#f2a65a", "#ffd06b", "#ffedaf", "#fff4e6"],
+      ["#0a1a2a", "#1c3b4b", "#2d6173", "#3e8a9c", "#4fb3c6", "#7ccad8", "#a9e0e8", "#d4f2f6"],
+      ["#2b1b2d", "#ff6b97", "#ff9cee", "#f5d0fe", "#87ceeb", "#98fb98", "#ffd700", "#fff0f5"],
     ];
     function drawCanvas() {
       for (let row = 0; row < gridSize; row++) {
