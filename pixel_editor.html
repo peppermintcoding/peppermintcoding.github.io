@@ -5,13 +5,13 @@
   <title>Pixel Art Editor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       background: #FAF3E0;
-      font-family: "Nunito Sans", sans-serif;
+      font-family: "Courier Prime", serif;
       font-size: 16px;
       color: #333;
     }
@@ -110,6 +110,32 @@
       max-width: 100%;
       height: auto;
     }
+    .palette-bar {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .prebuilt-palette {
+      display: flex;
+      gap: 5px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    .prebuilt-palette:hover { background: #f0f0f0; }
+    .prebuilt-palette.selected { background: #eaf8e0; }
+    .prebuilt-palette-swatch {
+      width: 30px;
+      height: 30px;
+      border: 2px solid transparent;
+      border-radius: 4px;
+    }
+    .prebuilt-palette.selected .prebuilt-palette-swatch { border-color: #FF6F81; }
     @media (max-width: 900px) {
       .container { flex-direction: column; align-items: center; }
       canvas { width: 90vw; }
@@ -131,6 +157,7 @@
       </div>
       <canvas id="pixelCanvas" width="640" height="640"></canvas>
     </div>
+    <div class="palette-bar" id="prebuiltPaletteBar"></div>
   </div>
   <script>
     const canvas = document.getElementById("pixelCanvas");
@@ -140,6 +167,11 @@
     let pixelColors = Array.from({ length: gridSize }, () => Array(gridSize).fill("#ffffff"));
     let currentColor = "#000000";
     const colorPaletteElement = document.getElementById("colorPalette");
+    const prebuiltPalettes = [
+      ["#23232e", "#3a323c", "#6b5258", "#a37370", "#c27f6f", "#cca795", "#d7c1b4", "#ded0c7"],
+      ["#FF9A9E", "#FAD0C4", "#FFCFDF", "#A1C4FD", "#C2E9FB", "#D4FC79", "#96E6A1", "#84FAB0"],
+      ["#C1DFB5", "#FFE5AD", "#FFB7B2", "#FAD4D4", "#BDE0FE", "#FFBCBC", "#F5C7A9", "#BCEBFF"]
+    ];
     function drawCanvas() {
       for (let row = 0; row < gridSize; row++) {
         for (let col = 0; col < gridSize; col++) {
@@ -148,7 +180,7 @@
         }
       }
       ctx.strokeStyle = "#ccc";
-      ctx.lineWidth = 0.5;
+      ctx.lineWidth = 0.75;
       for (let i = 0; i <= gridSize; i++) {
         ctx.beginPath();
         ctx.moveTo(i * cellSize, 0);
@@ -219,14 +251,45 @@
       container.appendChild(colorPicker);
       return container;
     }
+    function updateMainPalette(newColors) {
+      colorPaletteElement.innerHTML = "";
+      newColors.forEach(color => {
+        const paletteItem = createPaletteItem(color);
+        colorPaletteElement.appendChild(paletteItem);
+      });
+      const firstPaletteItem = colorPaletteElement.firstChild;
+      if (firstPaletteItem) {
+        firstPaletteItem.classList.add("selected");
+        currentColor = firstPaletteItem.querySelector("input[type=color]").value;
+      }
+    }
     function initializePalette() {
-      const defaultColors = ["#23232e", "#3a323c", "#6b5258", "#a37370", "#c27f6f", "#cca795", "#d7c1b4", "#ded0c7"];
+      const defaultColors = prebuiltPalettes[0];
       defaultColors.forEach(color => {
         const paletteItem = createPaletteItem(color);
         colorPaletteElement.appendChild(paletteItem);
       });
       colorPaletteElement.firstChild.classList.add("selected");
       currentColor = colorPaletteElement.firstChild.querySelector("input[type=color]").value;
+    }
+    function initializePrebuiltPaletteBar() {
+      const prebuiltPaletteBarElement = document.getElementById("prebuiltPaletteBar");
+      prebuiltPalettes.forEach(palette => {
+        const paletteContainer = document.createElement("div");
+        paletteContainer.classList.add("prebuilt-palette");
+        palette.forEach(color => {
+          const swatch = document.createElement("div");
+          swatch.classList.add("prebuilt-palette-swatch");
+          swatch.style.backgroundColor = color;
+          paletteContainer.appendChild(swatch);
+        });
+        paletteContainer.addEventListener("click", () => {
+          updateMainPalette(palette);
+          document.querySelectorAll(".prebuilt-palette").forEach(item => item.classList.remove("selected"));
+          paletteContainer.classList.add("selected");
+        });
+        prebuiltPaletteBarElement.appendChild(paletteContainer);
+      });
     }
     document.getElementById("saveButton").addEventListener("click", () => {
       const offscreenCanvas = document.createElement("canvas");
@@ -254,6 +317,7 @@
       });
     });
     initializePalette();
+    initializePrebuiltPaletteBar();
     drawCanvas();
   </script>
 </body>
