@@ -201,8 +201,10 @@
     }
     function drawPixelAt(event) {
       const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
       const col = Math.floor(x / cellSize);
       const row = Math.floor(y / cellSize);
       if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
