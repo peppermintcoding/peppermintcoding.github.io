@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Function Guessing Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Quicksand:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #fceabb, #f8b500);
+      font-family: "Quicksand", sans-serif;
+      color: #555;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      font-family: "Indie Flower", cursive;
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #d35400;
+    }
+    label {
+      font-size: 18px;
+      margin: 0 10px;
+      cursor: pointer;
+    }
+    canvas {
+      background: #fff;
+      border: 2px solid #f8b500;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    .inputs {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    input {
+      width: 60px;
+      padding: 8px;
+      border: 2px solid #f8b500;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 16px;
+      background: #fff7e6;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      background: #f8b500;
+      border: none;
+      border-radius: 15px;
+      color: #fff;
+      font-size: 18px;
+      font-family: "Quicksand", sans-serif;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #d35400;
+    }
+    #error {
+      font-size: 24px;
+      margin-top: 20px;
+      font-weight: 600;
+      color: #d35400;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Function Guessing Game</h2>
+    <label>
+      <input type="radio" name="type" value="quadratic" checked> Quadratic (ax² + bx + c)
+    </label>
+    <label>
+      <input type="radio" name="type" value="cubic"> Cubic (ax³ + bx² + cx + d)
+    </label>
+    <canvas id="plot"></canvas>
+    <div class="controls">
+      <div class="inputs" id="coeffInputs"></div>
+      <button onclick="checkFunction()">Check</button>
+      <button onclick="createNewFunction()">Create New</button>
+      <div id="error">Error: --</div>
+    </div>
+  </div>
+  <script>
+    const ctx = document.getElementById("plot").getContext("2d");
+    let chart;
+    let actualCoeffs = [1, -2, 1, 0];
+    let userCoeffs = [0, 0, 0, 0];
+    let functionType = "quadratic";
+    
+    function calculateError() {
+        const numCoeffs = functionType === "quadratic" ? 3 : 4;
+        let totalError = 0;
+        for (let i = 0; i < numCoeffs; i++) {
+            totalError += Math.abs(actualCoeffs[i] - userCoeffs[i])**(i+1);
+        }
+        document.getElementById("error").innerText = `Error: ${Math.round(totalError)}`;
+    }
+    function drawPlot() {
+      if (chart) chart.destroy();
+      const actualData = generateFunctionData(actualCoeffs, functionType);
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: actualData.map(p => p.x),
+          datasets: [
+            { label: "Actual", data: actualData.map(p => p.y), borderColor: "#d35400", fill: false, tension: 0.2 }
+          ]
+        },
+        options: { responsive: true, scales: { x: { type: "linear" }, y: { type: "linear" } } }
+      });
+    }
+    function generateFunctionData(coeffs, type) {
+      return Array.from({ length: 21 }, (_, i) => {
+        const x = i - 10;
+        const y = type === "quadratic"
+          ? coeffs[0] * x ** 2 + coeffs[1] * x + coeffs[2]
+          : coeffs[0] * x ** 3 + coeffs[1] * x ** 2 + coeffs[2] * x + coeffs[3];
+        return { x, y };
+      });
+    }
+    function checkFunction() {
+      const userData = generateFunctionData(userCoeffs, functionType);
+      chart.data.datasets[1] = { label: "Your Guess", data: userData.map(p => p.y), borderColor: "#27ae60", fill: false, tension: 0.2 };
+      chart.update();
+      calculateError();
+    }
+    function createNewFunction() {
+        actualCoeffs = [getRandomInt(-5, 5), getRandomInt(-5, 5), getRandomInt(-5, 5), getRandomInt(-5, 5)];
+        drawPlot();
+    }
+    function getRandomInt(low, high) {
+        return Math.floor(Math.random() * (high-low)) + low;
+    }
+    function updateInputs() {
+      const numCoeffs = functionType === "quadratic" ? 3 : 4;
+      const container = document.getElementById("coeffInputs");
+      container.innerHTML = "";
+      userCoeffs = Array(numCoeffs).fill(0);
+      for (let i = 0; i < numCoeffs; i++) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.placeholder = String.fromCharCode(97 + i);
+        input.oninput = (e) => userCoeffs[i] = parseInt(e.target.value) || 0;
+        container.appendChild(input);
+      }
+    }
+    document.querySelectorAll("input[name='type']").forEach(radio => {
+      radio.onchange = (e) => {
+        functionType = e.target.value;
+        updateInputs();
+        drawPlot();
+        document.getElementById("error").innerText = "Error: --";
+      };
+    });
+    updateInputs();
+    drawPlot();
+  </script>
+</body>
+</html>
