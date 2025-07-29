@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Time Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        .highscore {
+            font-size: 1.3rem;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #gameCanvas {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #gameCanvas:hover {
+            transform: translateY(-2px);
+        }
+
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #startBtn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #startBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        #startBtn:active {
+            transform: translateY(-1px);
+        }
+
+        #startBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            min-height: 30px;
+            text-align: center;
+        }
+
+        .round-counter {
+            margin-top: 10px;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .circle {
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">⚡ Reaction Time Game</h1>
+        <p class="description">
+            Test your reflexes! Click the colored circles as quickly as possible when they appear. 
+            Complete 5 rounds to see your average reaction time.
+        </p>
+        <div class="highscore" id="highscore">
+            Best Average: <span id="bestTime">0</span> ms
+        </div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            <button id="startBtn">Start Game</button>
+            <div class="status" id="status">Click Start to begin!</div>
+            <div class="round-counter" id="roundCounter"></div>
+        </div>
+    </div>
+
+    <script>
+        class ReactionGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.startBtn = document.getElementById('startBtn');
+                this.status = document.getElementById('status');
+                this.highscore = document.getElementById('bestTime');
+                this.roundCounter = document.getElementById('roundCounter');
+                
+                this.isPlaying = false;
+                this.currentRound = 0;
+                this.totalRounds = 5;
+                this.reactionTimes = [];
+                this.circleStartTime = 0;
+                this.bestAverage = localStorage.getItem('reactionTimeBest') || 0;
+                this.currentCircle = null;
+                
+                this.colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8'];
+                
+                this.init();
+            }
+            
+            init() {
+                this.highscore.textContent = this.bestAverage;
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+            }
+            
+            startGame() {
+                this.isPlaying = true;
+                this.currentRound = 0;
+                this.reactionTimes = [];
+                this.startBtn.disabled = true;
+                this.status.textContent = 'Get ready...';
+                this.roundCounter.textContent = '';
+                this.clearCanvas();
+                
+                setTimeout(() => {
+                    this.nextRound();
+                }, 1000);
+            }
+            
+            nextRound() {
+                if (this.currentRound >= this.totalRounds) {
+                    this.endGame();
+                    return;
+                }
+                
+                this.currentRound++;
+                this.updateRoundCounter();
+                this.status.textContent = 'Wait for the circle...';
+                
+                // Random delay between 1-4 seconds
+                const delay = Math.random() * 3000 + 1000;
+                
+                setTimeout(() => {
+                    if (this.isPlaying) {
+                        this.showCircle();
+                    }
+                }, delay);
+            }
+            
+            showCircle() {
+                this.clearCanvas();
+                
+                // Random position and size
+                const radius = Math.random() * 20 + 10; // 10-30px radius
+                const x = Math.random() * (this.canvas.width - radius * 2) + radius;
+                const y = Math.random() * (this.canvas.height - radius * 2) + radius;
+                const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+                
+                this.currentCircle = { x, y, radius, color };
+                this.drawCircle(x, y, radius, color);
+                
+                this.circleStartTime = Date.now();
+                this.status.textContent = 'Click the circle NOW!';
+            }
+            
+            drawCircle(x, y, radius, color) {
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = color;
+                this.ctx.fill();
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 3;
+                this.ctx.stroke();
+                
+                // Add a subtle glow effect
+                this.ctx.shadowColor = color;
+                this.ctx.shadowBlur = 20;
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+            }
+            
+            handleCanvasClick(e) {
+                if (!this.isPlaying || !this.currentCircle) return;
+                
+                const rect = this.canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                
+                const distance = Math.sqrt(
+                    Math.pow(clickX - this.currentCircle.x, 2) + 
+                    Math.pow(clickY - this.currentCircle.y, 2)
+                );
+                
+                if (distance <= this.currentCircle.radius) {
+                    // Hit!
+                    const reactionTime = Date.now() - this.circleStartTime;
+                    this.reactionTimes.push(reactionTime);
+                    
+                    this.status.textContent = `Great! ${reactionTime}ms`;
+                    this.currentCircle = null;
+                    this.clearCanvas();
+                    
+                    // Flash effect
+                    this.canvas.style.background = 'rgba(76, 175, 80, 0.3)';
+                    setTimeout(() => {
+                        this.canvas.style.background = 'rgba(255,255,255,0.95)';
+                    }, 200);
+                    
+                    setTimeout(() => {
+                        this.nextRound();
+                    }, 1500);
+                } else {
+                    // Miss
+                    this.status.textContent = 'Missed! Try again...';
+                    this.canvas.style.background = 'rgba(244, 67, 54, 0.3)';
+                    setTimeout(() => {
+                        this.canvas.style.background = 'rgba(255,255,255,0.95)';
+                        this.showCircle();
+                    }, 500);
+                }
+            }
+            
+            updateRoundCounter() {
+                this.roundCounter.textContent = `Round ${this.currentRound} of ${this.totalRounds}`;
+            }
+            
+            endGame() {
+                this.isPlaying = false;
+                const average = Math.round(this.reactionTimes.reduce((a, b) => a + b) / this.reactionTimes.length);
+                
+                this.status.innerHTML = `
+                    <div class="fade-in">
+                        <strong>Game Complete!</strong><br>
+                        Average reaction time: <strong>${average}ms</strong>
+                    </div>
+                `;
+                
+                // Check for new best
+                if (this.bestAverage === 0 || average < this.bestAverage) {
+                    this.bestAverage = average;
+                    this.highscore.textContent = this.bestAverage;
+                    localStorage.setItem('reactionTimeBest', this.bestAverage);
+                    
+                    setTimeout(() => {
+                        this.status.innerHTML += '<div style="color: #4ecdc4; margin-top: 10px;">🎉 New Personal Best! 🎉</div>';
+                    }, 1000);
+                }
+                
+                this.roundCounter.textContent = '';
+                this.startBtn.disabled = false;
+                this.clearCanvas();
+                
+                // Show celebration effect
+                this.drawCelebration();
+            }
+            
+            drawCelebration() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        this.ctx.beginPath();
+                        this.ctx.arc(centerX, centerY, 20 + i * 15, 0, 2 * Math.PI);
+                        this.ctx.strokeStyle = this.colors[i % this.colors.length];
+                        this.ctx.lineWidth = 3;
+                        this.ctx.stroke();
+                    }, i * 100);
+                }
+            }
+            
+            clearCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+        
+        // Start the game when page loads
+        window.addEventListener('load', () => {
+            new ReactionGame();
+        });
+    </script>
+</body>
+</html>
