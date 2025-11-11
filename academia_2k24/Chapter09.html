@@ -4,14 +4,28 @@
             <meta charset="UTF-8">
             <title>Chapter09</title>
             <style>
+                @font-face {
+                    font-family: 'Myna';
+                    src: url('fonts/Myna.otf') format('opentype');
+                    font-weight: normal;
+                    font-style: normal;
+                }
                 body {
-                    font-family: Georgia, serif;
+                    font-family: Myna, Georgia, serif;
                     max-width: 700px;
                     margin: 60px auto;
                     line-height: 1.7;
                     color: #222;
                     padding: 0 15px;
                 }
+
+                @media (max-width: 768px) {
+                    body {
+                        padding: 15px;
+                        font-size: 16px;
+                    }
+                }
+
                 a {
                     color: #3366cc;
                     text-decoration: none;
