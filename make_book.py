@@ -21,6 +21,9 @@ def generate_html(title, body, next_link):
                     line-height: 1.7;
                     color: #222;
                     padding: 0 15px;
+                    background-color: #f8f5de; /* very soft yellow tint */
+                    background-image: radial-gradient(#a7a6a6 0.6px, transparent 0.8px);
+                    background-size: 5mm 5mm; /* dots every centimeter */
                 }}
 
                 @media (max-width: 768px) {{
