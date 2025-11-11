@@ -3,35 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Website</title>
+    <title>Myntis Playground</title>
     <style>
-        header {
-            background-color: #333;
-            color: #f0f0f0;
-            padding: 10px;
-            text-align: center;
+        @font-face {
+            font-family: "Myna";
+            src: url("fonts/Myna.otf") format("opentype");
+            font-weight: normal;
+            font-style: normal;
         }
 
-        header a {
-            color: white;
-            margin: 0 15px;
+        body {
+            margin: 0;
+            font-family: Myna, "Verdana", "Arial", sans-serif;
+            background: #0a0a0a url("backgrounds/stars_tile.png") repeat;
+            color: #e0e0e0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: linear-gradient(180deg, #202020, #101010);
+            border-right: 2px solid #444;
+            padding: 20px 10px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: fixed;
+            height: 100%;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 22px;
+            text-shadow: 0 0 5px #00ffff;
+            color: #00ffff;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ccc;
             text-decoration: none;
-            font-size: 18px;
+            font-size: 17px;
+            margin: 8px 0;
+            padding: 5px 10px;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
         }
 
-        header a:hover {
-            text-decoration: underline;
+        .sidebar a:hover {
+            background: #00ffff33;
+            color: #fff;
+            text-shadow: 0 0 8px #00ffff;
+        }
+
+        .content {
+            margin-left: 240px;
+            padding: 30px;
+            flex: 1;
+            max-width: 800px;
+        }
+
+        .content h1 {
+            color: #00ffff;
+            text-shadow: 0 0 8px #00ffff;
+            font-size: 2em;
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                border-right: none;
+                border-bottom: 2px solid #444;
+            }
+            .content {
+                margin: 0;
+                padding: 20px;
+            }
+            .sidebar a {
+                margin: 5px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <a href="color_guesser_game.html">color guessing game</a>
-        <a href="random_yoga_video.html">random yoga video</a>
-        <a href="pixel_editor.html">pixel editor</a>
-        <a href="function_guesser.html">function guesser</a>
-        <a href="reaction_game.html">reaction game</a>
-        <a href="academia_2k24/Chapter01.html">academia 2k24</a>
-    </header>
+    <nav class="sidebar">
+        <h2>My Site</h2>
+        <a href="color_guesser_game.html">Color Guesser</a>
+        <a href="random_yoga_video.html">Random Yoga Video</a>
+        <a href="pixel_editor.html">Pixel Editor</a>
+        <a href="function_guesser.html">Function Guesser</a>
+        <a href="reaction_game.html">Reaction Game</a>
+        <a href="academia_2k24/Chapter00.html">Academia 2k24</a>
+    </nav>
+
+    <main class="content">
+        <h1>Hey</h1>
+        <p>Sphinx of black quartz, judge my vow.</p>
+    </main>
 </body>
 </html>
