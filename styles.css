@@ -1,0 +1,97 @@
+@font-face {
+    font-family: "Myna";
+    src: url("fonts/Myna.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    margin: 0;
+    font-family: Myna, "Verdana", "Arial", sans-serif;
+    background-color: #f8f5de;
+    background-image: radial-gradient(#a7a6a6 0.6px, transparent 0.8px);
+    background-size: 5mm 5mm;
+    color: #222;
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    background: linear-gradient(180deg, #202020, #101010);
+    border-right: 2px solid #444;
+    padding: 20px 10px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: fixed;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+}
+
+.sidebar h2 {
+    font-size: 22px;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.sidebar a {
+    display: block;
+    color: #ccc;
+    text-decoration: none;
+    font-size: 17px;
+    margin: 8px 0;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar a:hover {
+    background: #b60f3933;
+    color: #fff;
+}
+
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+    padding-left: 80px;
+}
+
+.content {
+    max-width: 800px;
+    width: 100%;
+}
+
+.content p {
+    font-size: 1.15rem;
+}
+
+.content h1 {
+    font-size: 2em;
+    line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        border-right: none;
+        border-bottom: 2px solid #444;
+    }
+    .content-wrapper {
+        padding: 20px;
+    }
+    .sidebar a {
+        margin: 5px;
+        font-size: 16px;
+    }
+}
