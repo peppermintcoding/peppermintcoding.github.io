@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lern ein Gedicht</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209;
+    --parchment: #f5edd8;
+    --sepia: #8b6914;
+    --sepia-light: #c8a84b;
+    --fade: #c4b08a;
+    --red: #8b1a1a;
+    --green: #1a5c2a;
+    --shadow: rgba(26,18,9,0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--parchment);
+    min-height: 100vh;
+    font-family: 'EB Garamond', serif;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.15;
+  }
+
+  #card {
+    position: relative;
+    width: min(680px, 94vw);
+    min-height: 420px;
+    background: var(--parchment);
+    background-image:
+      radial-gradient(ellipse at 10% 10%, #fdf6e3 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 90%, #edddb0 0%, transparent 50%);
+    border-radius: 2px;
+    padding: 52px 60px 44px;
+    box-shadow:
+      0 2px 4px var(--shadow),
+      0 8px 24px rgba(0,0,0,0.35),
+      0 24px 60px rgba(0,0,0,0.3),
+      inset 0 0 0 1px rgba(139,105,20,0.25),
+      inset 2px 2px 8px rgba(255,255,255,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  #card::before {
+    content: '— Gedichte sind Balsam für die Seele. —';
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: var(--sepia);
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+
+  #timer {
+    position: absolute;
+    top: 14px;
+    right: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--sepia);
+    letter-spacing: 0.05em;
+    display: none;
+  }
+
+  #timer span {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--red);
+  }
+
+  #round-badge {
+    position: absolute;
+    top: 14px;
+    left: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--sepia);
+    opacity: 0;
+    transition: opacity 0.6s;
+    text-transform: uppercase;
+  }
+
+  #poem-title {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(139,105,20,0.3);
+    margin-bottom: 4px;
+  }
+
+  #poem-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .poem-line {
+    font-size: 28px;
+    line-height: 1.55;
+    color: var(--ink);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .word {
+    display: inline-block;
+    position: relative;
+    transition: opacity 0.4s ease, color 0.2s ease, transform 0.2s ease;
+    cursor: default;
+  }
+
+  .word.faded {
+    opacity: 0;
+  }
+
+  .word.correct-flash {
+    color: var(--green);
+    transform: scale(1.08);
+  }
+
+  .word.wrong-flash {
+    color: var(--red);
+    transform: scale(1.08);
+  }
+
+  .word.faded-blank::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--fade);
+  }
+
+  #choices-area {
+    min-height: 60px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(139,105,20,0.2);
+  }
+
+  .choice-word {
+    display: inline-block;
+    padding: 6px 16px;
+    border: 1px solid var(--sepia);
+    border-radius: 1px;
+    font-family: 'EB Garamond', serif;
+    font-size: 24px;
+    color: var(--sepia);
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease,
+                box-shadow 0.18s ease, opacity 0.35s ease;
+    user-select: none;
+    background: rgba(139,105,20,0.05);
+  }
+
+  .choice-word:hover {
+    transform: scale(1.15);
+    background: rgba(139,105,20,0.12);
+    color: var(--ink);
+    box-shadow: 0 2px 8px rgba(139,105,20,0.2);
+  }
+
+  /* Fade out instead of vanish */
+  .choice-word.used {
+    opacity: 0.15;
+    pointer-events: none;
+    transform: scale(0.92);
+  }
+
+  #status {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    letter-spacing: 0.12em;
+    color: var(--sepia);
+    min-height: 18px;
+    text-transform: uppercase;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: var(--parchment);
+    background-image: radial-gradient(ellipse at 10% 10%, #fdf6e3 0%, transparent 50%);
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 10;
+  }
+
+  .overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .overlay h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 32px;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+  }
+
+  .overlay p {
+    font-size: 22px;
+    color: var(--sepia);
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.6;
+  }
+
+  .overlay .ornament {
+    font-size: 34px;
+    color: var(--sepia-light);
+  }
+
+  .btn {
+    margin-top: 8px;
+    padding: 10px 32px;
+    border: 1px solid var(--sepia);
+    background: transparent;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sepia);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn:hover {
+    background: var(--sepia);
+    color: var(--parchment);
+  }
+
+  .btn-secondary {
+    font-size: 14px;
+    opacity: 0.6;
+    margin-top: -8px;
+  }
+
+  .btn-secondary:hover { opacity: 1; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes popIn {
+    0%   { transform: scale(0.7); opacity: 0; }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .choice-word { animation: popIn 0.3s ease both; }
+  #poem-title  { animation: fadeInUp 0.6s ease both; }
+  .poem-line   { animation: fadeInUp 0.6s ease both; }
+  .poem-line:nth-child(1) { animation-delay: 0.05s; }
+  .poem-line:nth-child(2) { animation-delay: 0.12s; }
+  .poem-line:nth-child(3) { animation-delay: 0.19s; }
+  .poem-line:nth-child(4) { animation-delay: 0.26s; }
+
+  @keyframes timerPulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.12); }
+  }
+
+  .timer-urgent span { animation: timerPulse 0.6s ease infinite; }
+</style>
+</head>
+<body>
+<div id="card">
+  <div id="round-badge">Runde <span id="round-num">1</span></div>
+  <div id="timer">Noch <span id="timer-val">10</span>s</div>
+
+  <div id="poem-title">Bumerang</div>
+  <div id="poem-container"></div>
+
+  <div id="status"></div>
+  <div id="choices-area"></div>
+
+  <div class="overlay" id="overlay-win">
+    <div class="ornament">✦</div>
+    <h2>Wow!</h2>
+    <p>Du hast dir das ganze Gedicht gemerkt.<br>Erzähl es jemanden, den du liebst.</p>
+    <button class="btn" onclick="fullRestart()">Nochmal von vorne</button>
+  </div>
+
+  <div class="overlay" id="overlay-fail">
+    <div class="ornament">✦</div>
+    <h2>Hmmm …</h2>
+    <p id="fail-msg">Fast, aber nicht ganz.</p>
+    <button class="btn" onclick="retryRound()">Nochmal versuchen</button>
+    <button class="btn btn-secondary" onclick="fullRestart()">Von vorne anfangen</button>
+  </div>
+</div>
+
+<script>
+const POEM_LINES = [
+  "War einmal ein Bumerang;",
+  "War ein Weniges zu lang.",
+  "Bumerang flog ein Stück,",
+  "Aber kam nicht mehr zurück.",
+  "Publikum - noch stundenlang -",
+  "wartete auf Bumerang.",
+];
+
+const NEW_PER_ROUND = [1, 2, 2, 2, 2, 2, 2, 2, 2, 2];
+
+let allWords      = [];
+let fadedIds      = new Set();
+let savedFadedIds = new Set();
+let solvedIds     = new Set();
+let clickOrder    = [];
+let expectedOrder = [];
+let round         = 0;
+let savedRound    = 0;
+let timerInterval = null;
+let gameActive    = false;
+
+function buildWords() {
+  allWords = [];
+  let id = 0;
+  POEM_LINES.forEach((line, li) => {
+    (line.match(/[^\s]+/g) || []).forEach((tok, wi) => {
+      allWords.push({ id: id++, lineIdx: li, wordIdx: wi, text: tok });
+    });
+  });
+}
+
+function renderPoem() {
+  const container = document.getElementById('poem-container');
+  container.innerHTML = '';
+  const byLine = {};
+  allWords.forEach(w => {
+    (byLine[w.lineIdx] = byLine[w.lineIdx] || []).push(w);
+  });
+  Object.keys(byLine).sort((a,b) => a-b).forEach(li => {
+    const lineEl = document.createElement('div');
+    lineEl.className = 'poem-line';
+    byLine[li].forEach(w => {
+      const span = document.createElement('span');
+      const hidden = fadedIds.has(w.id) && !solvedIds.has(w.id);
+      span.className = 'word' + (hidden ? ' faded faded-blank' : '');
+      span.id = 'word-' + w.id;
+      span.textContent = w.text;
+      lineEl.appendChild(span);
+    });
+    container.appendChild(lineEl);
+  });
+}
+
+function renderChoices(ids) {
+  const area = document.getElementById('choices-area');
+  area.innerHTML = '';
+  [...ids].sort(() => Math.random() - 0.5).forEach((wid, i) => {
+    const w  = allWords.find(x => x.id === wid);
+    const el = document.createElement('span');
+    el.className      = 'choice-word';
+    el.textContent    = w.text;
+    el.dataset.wid    = wid;
+    el.style.animationDelay = (i * 0.05) + 's';
+    el.addEventListener('click', () => onChoiceClick(wid, el));
+    area.appendChild(el);
+  });
+}
+
+function startTimer(seconds, onDone) {
+  const timerEl = document.getElementById('timer');
+  const valEl   = document.getElementById('timer-val');
+  timerEl.style.display = 'block';
+  valEl.textContent = seconds;
+  timerEl.classList.remove('timer-urgent');
+  let remaining = seconds;
+  timerInterval = setInterval(() => {
+    remaining--;
+    valEl.textContent = remaining;
+    if (remaining <= 3) timerEl.classList.add('timer-urgent');
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerEl.style.display = 'none';
+      onDone();
+    }
+  }, 1000);
+}
+
+// Show the full poem (no blanks) for 10s, then call onDone
+function readPhase(onDone) {
+  gameActive = false;
+  solvedIds.clear();
+  clickOrder = [];
+  document.getElementById('choices-area').innerHTML = '';
+  document.getElementById('status').textContent = 'Lies das Gedicht …';
+  document.getElementById('timer').style.display = 'none';
+
+  // Temporarily reveal everything
+  const backup = new Set(fadedIds);
+  fadedIds.clear();
+  renderPoem();
+  fadedIds = backup;
+
+  startTimer(10, onDone);
+}
+
+// Add new words to fadedIds, save state, then go straight into the round
+function startNextRound() {
+  round++;
+
+  const available = allWords.filter(w => !fadedIds.has(w.id));
+  const newCount  = Math.min(NEW_PER_ROUND[round - 1] ?? 2, available.length);
+  [...available].sort(() => Math.random() - 0.5)
+    .slice(0, newCount)
+    .forEach(w => fadedIds.add(w.id));
+
+  // Snapshot so retry can return here
+  savedFadedIds = new Set(fadedIds);
+  savedRound    = round;
+
+  launchRound();
+}
+
+// Render UI for the current fadedIds — called both fresh and on retry
+function launchRound() {
+  gameActive    = true;
+  clickOrder    = [];
+  solvedIds.clear();
+
+  document.getElementById('round-badge').style.opacity = '1';
+  document.getElementById('round-num').textContent = round;
+
+  const fadedCount = fadedIds.size;
+  document.getElementById('status').textContent =
+    fadedCount === 1
+      ? 'Welches Wort fehlt?'
+      : `${fadedCount} Wörter fehlen · Klicke in der richtigen Reihenfolge`;
+
+  expectedOrder = [...fadedIds].sort((a, b) => a - b);
+
+  renderPoem();
+  renderChoices(expectedOrder);
+}
+
+function onChoiceClick(wid, el) {
+  if (!gameActive) return;
+
+  const expectedId = expectedOrder[clickOrder.length];
+  el.classList.add('used'); // fade it out visually
+  const wordEl = document.getElementById('word-' + wid);
+
+  if (wid === expectedId) {
+    // ✅ Correct
+    clickOrder.push(wid);
+    solvedIds.add(wid);
+
+    if (wordEl) {
+      wordEl.classList.remove('faded', 'faded-blank');
+      wordEl.classList.add('correct-flash');
+      setTimeout(() => wordEl.classList.remove('correct-flash'), 600);
+    }
+
+    if (clickOrder.length === expectedOrder.length) {
+      // Round complete
+      gameActive = false;
+      document.getElementById('status').textContent = '✓ Richtig!';
+
+      if (fadedIds.size === allWords.length) {
+        // Final round done — win!
+        setTimeout(showWin, 800);
+      } else {
+        // Go directly into next round, no reading pause
+        setTimeout(() => startNextRound(), 900);
+      }
+    }
+
+  } else {
+    // ❌ Wrong
+    if (wordEl) {
+      wordEl.classList.add('wrong-flash');
+      setTimeout(() => wordEl.classList.remove('wrong-flash'), 600);
+    }
+    gameActive = false;
+
+    const wrongW  = allWords.find(x => x.id === wid);
+    const expectW = allWords.find(x => x.id === expectedId);
+    document.getElementById('fail-msg').textContent =
+      `Du hast „${wrongW.text}" gewählt, aber „${expectW.text}" wurde zuerst erwartet.`;
+
+    setTimeout(showFail, 700);
+  }
+}
+
+function showWin() {
+  gameActive = false;
+  document.getElementById('overlay-win').classList.add('active');
+}
+
+function showFail() {
+  document.getElementById('overlay-fail').classList.add('active');
+}
+
+// Retry: read the full poem for 10s, then re-launch the same round
+function retryRound() {
+  document.getElementById('overlay-fail').classList.remove('active');
+  clearInterval(timerInterval);
+
+  fadedIds = new Set(savedFadedIds);
+  round    = savedRound;
+
+  readPhase(() => launchRound());
+}
+
+// Full restart from scratch
+function fullRestart() {
+  document.getElementById('overlay-win').classList.remove('active');
+  document.getElementById('overlay-fail').classList.remove('active');
+  clearInterval(timerInterval);
+
+  fadedIds.clear();
+  savedFadedIds.clear();
+  round      = 0;
+  savedRound = 0;
+  document.getElementById('round-badge').style.opacity = '0';
+
+  buildWords();
+  readPhase(() => startNextRound());
+}
+
+buildWords();
+readPhase(() => startNextRound());
+</script>
+</body>
+</html>
