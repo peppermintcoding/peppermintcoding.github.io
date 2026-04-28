@@ -1,0 +1,100 @@
+{
+  "defaultLanguage": "de",
+  "maskProgression": [1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6],
+  "languages": {
+    "de": {
+      "htmlLang": "de",
+      "pageTitle": "Lern ein Gedicht",
+      "flag": "🇩🇪",
+      "languageName": "Deutsch",
+      "cardQuote": "- Gedichte sind Balsam für die Seele. -",
+      "defaultPoemTitle": "Gedicht des Tages",
+      "authorPrefix": "von",
+      "roundLabel": "Runde",
+      "timerPrefix": "Noch",
+      "timerSuffix": "s",
+      "languageSwitcherLabel": "Sprache wechseln",
+      "winTitle": "Wow!",
+      "winMessage": [
+        "Du hast dir das ganze Gedicht gemerkt!",
+        "Erzähl es jemanden, den du liebst."
+      ],
+      "restartLabel": "Nochmal von vorne",
+      "failTitle": "Hmmm ...",
+      "failFallback": "Fast, aber nicht ganz.",
+      "retryLabel": "Nochmal versuchen",
+      "secondaryRestartLabel": "Von vorne anfangen",
+      "loadErrorLine": "Die Inhalte konnten nicht geladen werden.",
+      "reloadPrompt": "Bitte lade die Seite neu.",
+      "loadingStatus": "Gedicht wird geladen ...",
+      "readingStatus": "Lies das Gedicht ...",
+      "usedWordStatus": "Dieses Wort hast du schon benutzt.",
+      "perfectStatus": "Perfekt.",
+      "correctStatus": "Richtig.",
+      "wrongStatus": "Nicht ganz.",
+      "oneMissingStatus": "Welches Wort fehlt?",
+      "manyMissingStatus": "{count} Wörter fehlen noch.",
+      "failMessage": "Du hast „{chosen}“ gewählt, aber „{expected}“ wäre richtig gewesen.",
+      "poems": [
+        {
+          "title": "Bumerang",
+          "author": "Joachim Ringelnatz",
+          "lines": [
+            "War einmal ein Bumerang;",
+            "War ein Weniges zu lang.",
+            "Bumerang flog ein Stück,",
+            "Aber kam nicht mehr zurück.",
+            "Publikum - noch stundenlang -",
+            "wartete auf Bumerang."
+          ]
+        }
+      ]
+    },
+    "en": {
+      "htmlLang": "en",
+      "pageTitle": "Memorize a Poem",
+      "flag": "🇬🇧",
+      "languageName": "English",
+      "cardQuote": "- Poetry feeds the soul. -",
+      "defaultPoemTitle": "Poem of the Day",
+      "authorPrefix": "by",
+      "roundLabel": "Round",
+      "timerPrefix": "Time",
+      "timerSuffix": "s",
+      "languageSwitcherLabel": "Switch language",
+      "winTitle": "Wow!",
+      "winMessage": [
+        "You remembered the entire poem!",
+        "Share it with someone you love."
+      ],
+      "restartLabel": "Start over",
+      "failTitle": "Hmm ...",
+      "failFallback": "Close, but not quite.",
+      "retryLabel": "Try again",
+      "secondaryRestartLabel": "Restart from the beginning",
+      "loadErrorLine": "The content could not be loaded.",
+      "reloadPrompt": "Please reload the page.",
+      "loadingStatus": "Loading poem ...",
+      "readingStatus": "Read the poem ...",
+      "usedWordStatus": "You already used that word.",
+      "perfectStatus": "Perfect.",
+      "correctStatus": "Correct.",
+      "wrongStatus": "Not quite.",
+      "oneMissingStatus": "Which word is missing?",
+      "manyMissingStatus": "{count} words are still missing.",
+      "failMessage": "You chose \"{chosen}\", but \"{expected}\" would have been correct.",
+      "poems": [
+        {
+          "title": "Faith is a Fine Invention",
+          "author": "Emily Dickinson",
+          "lines": [
+            "'Faith' is a fine invention",
+            "When Gentlemen can see-.",
+            "But Microscopes are prudent",
+            "In an Emergency."
+          ]
+        }
+      ]
+    }
+  }
+}

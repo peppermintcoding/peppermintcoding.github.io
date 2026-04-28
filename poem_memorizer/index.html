@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lern ein Gedicht</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="card">
+    <div id="round-badge"><span id="round-label">Runde</span> <span id="round-num">1</span></div>
+
+    <div id="top-controls">
+      <div class="language-switcher" id="language-switcher" aria-label="Sprache wechseln"></div>
+      <div id="timer">
+        <span id="timer-prefix">Noch</span> <span id="timer-val">10</span><span id="timer-suffix">s</span>
+      </div>
+    </div>
+
+    <div id="card-quote">- Gedichte sind Balsam für die Seele. -</div>
+
+    <div id="poem-title">Gedicht des Tages</div>
+    <div id="poem-author"></div>
+    <div id="poem-container"></div>
+
+    <div id="status" aria-live="polite"></div>
+    <div id="choices-area"></div>
+
+    <div class="overlay" id="overlay-win">
+      <h2 id="win-title">Wow!</h2>
+      <p id="win-message"></p>
+      <button class="btn" id="restart-button" type="button">Nochmal von vorne</button>
+    </div>
+
+    <div class="overlay" id="overlay-fail">
+      <h2 id="fail-title">Hmmm ...</h2>
+      <p id="fail-msg">Fast, aber nicht ganz.</p>
+      <button class="btn" id="retry-button" type="button">Nochmal versuchen</button>
+      <button class="btn btn-secondary" id="secondary-restart-button" type="button">Von vorne anfangen</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
