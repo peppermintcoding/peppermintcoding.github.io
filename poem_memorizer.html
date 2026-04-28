@@ -13,7 +13,11 @@
     --sepia-light: #c8a84b;
     --fade: #c4b08a;
     --red: #8b1a1a;
+    --red-soft: #b64848;
     --green: #1a5c2a;
+    --green-light: #dcefdc;
+    --gold: #b78a12;
+    --gold-light: #f4e4a6;
     --shadow: rgba(26,18,9,0.18);
   }
 
@@ -116,6 +120,17 @@
     margin-bottom: 4px;
   }
 
+  #poem-author {
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    color: var(--sepia);
+    opacity: 0.78;
+    margin-top: -8px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
   #poem-container {
     display: flex;
     flex-direction: column;
@@ -138,7 +153,10 @@
   .word {
     display: inline-block;
     position: relative;
-    transition: opacity 0.4s ease, color 0.2s ease, transform 0.2s ease;
+    padding: 0 4px;
+    border-radius: 4px;
+    transition: opacity 0.4s ease, color 0.2s ease, transform 0.2s ease,
+                background-color 0.3s ease, box-shadow 0.3s ease;
     cursor: default;
   }
 
@@ -148,7 +166,9 @@
 
   .word.correct-flash {
     color: var(--green);
-    transform: scale(1.08);
+    transform: translateY(-1px) scale(1.08);
+    background: linear-gradient(180deg, rgba(220,239,220,0) 0%, rgba(220,239,220,0.95) 100%);
+    box-shadow: 0 8px 18px rgba(26,92,42,0.14);
   }
 
   .word.wrong-flash {
@@ -179,6 +199,7 @@
 
   .choice-word {
     display: inline-block;
+    position: relative;
     padding: 6px 16px;
     border: 1px solid var(--sepia);
     border-radius: 1px;
@@ -201,9 +222,49 @@
 
   /* Fade out instead of vanish */
   .choice-word.used {
-    opacity: 0.15;
-    pointer-events: none;
-    transform: scale(0.92);
+    opacity: 0.62;
+    transform: none;
+    color: rgba(26,18,9,0.58);
+    border-color: rgba(139,105,20,0.35);
+    background: rgba(139,105,20,0.09);
+    padding-right: 34px;
+  }
+
+  .choice-word.used::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--green);
+    opacity: 0.85;
+  }
+
+  .choice-word.used:hover {
+    transform: none;
+    background: rgba(139,105,20,0.11);
+    color: rgba(26,18,9,0.58);
+    box-shadow: none;
+  }
+
+  .choice-word.correct {
+    color: var(--green);
+    border-color: rgba(26,92,42,0.45);
+    background: linear-gradient(180deg, rgba(220,239,220,0.75) 0%, rgba(220,239,220,1) 100%);
+    box-shadow: 0 8px 20px rgba(26,92,42,0.18);
+  }
+
+  .choice-word.already-used {
+    animation: usedShake 0.35s ease;
+    border-color: rgba(183,138,18,0.7);
+    background: rgba(244,228,166,0.55);
+  }
+
+  .choice-word.wrong {
+    animation: wrongShake 0.35s ease;
+    border-color: rgba(139,26,26,0.55);
+    background: rgba(139,26,26,0.1);
   }
 
   #status {
@@ -214,6 +275,20 @@
     color: var(--sepia);
     min-height: 18px;
     text-transform: uppercase;
+    transition: color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  #status[data-tone="correct"] {
+    color: var(--green);
+    transform: translateY(-1px);
+  }
+
+  #status[data-tone="used"] {
+    color: var(--gold);
+  }
+
+  #status[data-tone="wrong"] {
+    color: var(--red);
   }
 
   .overlay {
@@ -296,8 +371,23 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
+  @keyframes usedShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  @keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+  }
+
   .choice-word { animation: popIn 0.3s ease both; }
   #poem-title  { animation: fadeInUp 0.6s ease both; }
+  #poem-author { animation: fadeInUp 0.6s ease both; animation-delay: 0.03s; }
   .poem-line   { animation: fadeInUp 0.6s ease both; }
   .poem-line:nth-child(1) { animation-delay: 0.05s; }
   .poem-line:nth-child(2) { animation-delay: 0.12s; }
@@ -317,7 +407,8 @@
   <div id="round-badge">Runde <span id="round-num">1</span></div>
   <div id="timer">Noch <span id="timer-val">10</span>s</div>
 
-  <div id="poem-title">Bumerang</div>
+  <div id="poem-title">Gedicht des Tages</div>
+  <div id="poem-author"></div>
   <div id="poem-container"></div>
 
   <div id="status"></div>
@@ -340,36 +431,133 @@
 </div>
 
 <script>
-const POEM_LINES = [
-  "War einmal ein Bumerang;",
-  "War ein Weniges zu lang.",
-  "Bumerang flog ein Stück,",
-  "Aber kam nicht mehr zurück.",
-  "Publikum - noch stundenlang -",
-  "wartete auf Bumerang.",
-];
-
+const POEMS_URL = 'poem_memorizer_poems.json';
 const NEW_PER_ROUND = [1, 2, 2, 2, 2, 2, 2, 2, 2, 2];
 
+let poemLines     = [];
+let currentPoem   = null;
 let allWords      = [];
 let fadedIds      = new Set();
 let savedFadedIds = new Set();
 let solvedIds     = new Set();
+let usedChoiceIds = new Set();
 let clickOrder    = [];
 let expectedOrder = [];
 let round         = 0;
 let savedRound    = 0;
 let timerInterval = null;
 let gameActive    = false;
+let statusTimeout = null;
+
+function renderPoemMeta() {
+  document.getElementById('poem-title').textContent = currentPoem?.title || 'Gedicht des Tages';
+  document.getElementById('poem-author').textContent = currentPoem?.author ? `von ${currentPoem.author}` : '';
+}
+
+function hasGuessableChars(token) {
+  return /[\p{L}\p{N}]/u.test(token);
+}
+
+function tokenizeLine(line) {
+  const rawTokens = line.match(/\S+/g) || [];
+  const mergedTokens = [];
+  let pendingPrefix = [];
+
+  rawTokens.forEach(token => {
+    if (hasGuessableChars(token)) {
+      const prefix = pendingPrefix.length ? `${pendingPrefix.join(' ')} ` : '';
+      mergedTokens.push(prefix + token);
+      pendingPrefix = [];
+      return;
+    }
+
+    if (mergedTokens.length) {
+      mergedTokens[mergedTokens.length - 1] += ` ${token}`;
+    } else {
+      pendingPrefix.push(token);
+    }
+  });
+
+  if (pendingPrefix.length && mergedTokens.length) {
+    mergedTokens[mergedTokens.length - 1] += ` ${pendingPrefix.join(' ')}`;
+  }
+
+  return mergedTokens;
+}
 
 function buildWords() {
   allWords = [];
   let id = 0;
-  POEM_LINES.forEach((line, li) => {
-    (line.match(/[^\s]+/g) || []).forEach((tok, wi) => {
+  poemLines.forEach((line, li) => {
+    tokenizeLine(line).forEach((tok, wi) => {
       allWords.push({ id: id++, lineIdx: li, wordIdx: wi, text: tok });
     });
   });
+}
+
+function dayOfYearUtc(date) {
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+  const today = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  return Math.floor((today - start) / 86400000);
+}
+
+function hashString(value) {
+  let hash = 0;
+  for (const char of value) {
+    hash = ((hash * 31) + char.charCodeAt(0)) >>> 0;
+  }
+  return hash;
+}
+
+function pickDailyPoem(poems, date = new Date()) {
+  if (!poems.length) {
+    throw new Error('No poems available');
+  }
+
+  // UTC keeps the selection identical for every visitor on the same calendar day.
+  const seed = `${date.getUTCFullYear()}-${dayOfYearUtc(date)}`;
+  return poems[hashString(seed) % poems.length];
+}
+
+function isValidPoem(poem) {
+  return poem
+    && typeof poem.title === 'string'
+    && typeof poem.author === 'string'
+    && Array.isArray(poem.lines)
+    && poem.lines.length > 0
+    && poem.lines.every(line => typeof line === 'string' && line.trim().length > 0);
+}
+
+async function loadPoems() {
+  const response = await fetch(POEMS_URL, { cache: 'no-store' });
+  if (!response.ok) {
+    throw new Error(`Failed to load poems (${response.status})`);
+  }
+
+  const data = await response.json();
+  if (!data || !Array.isArray(data.poems)) {
+    throw new Error('Invalid poem payload');
+  }
+
+  const poems = data.poems.filter(isValidPoem);
+  if (!poems.length) {
+    throw new Error('No valid poems found');
+  }
+
+  return poems;
+}
+
+function showLoadError() {
+  gameActive = false;
+  clearInterval(timerInterval);
+  clearTimeout(statusTimeout);
+  renderPoemMeta();
+  document.getElementById('poem-container').innerHTML =
+    '<div class="poem-line">Die Gedichte konnten nicht geladen werden.</div>';
+  document.getElementById('choices-area').innerHTML = '';
+  document.getElementById('status').textContent = 'Bitte lade die Seite neu.';
+  document.getElementById('status').dataset.tone = 'wrong';
+  document.getElementById('round-badge').style.opacity = '0';
 }
 
 function renderPoem() {
@@ -400,13 +588,46 @@ function renderChoices(ids) {
   [...ids].sort(() => Math.random() - 0.5).forEach((wid, i) => {
     const w  = allWords.find(x => x.id === wid);
     const el = document.createElement('span');
-    el.className      = 'choice-word';
+    el.className      = 'choice-word' + (usedChoiceIds.has(wid) ? ' used' : '');
     el.textContent    = w.text;
     el.dataset.wid    = wid;
+    el.dataset.word   = w.text;
     el.style.animationDelay = (i * 0.05) + 's';
     el.addEventListener('click', () => onChoiceClick(wid, el));
     area.appendChild(el);
   });
+}
+
+function getWordById(id) {
+  return allWords.find(w => w.id === id);
+}
+
+function getRoundStatus() {
+  const remainingCount = Math.max(expectedOrder.length - clickOrder.length, 0) || fadedIds.size;
+  return remainingCount === 1
+    ? 'Welches Wort fehlt?'
+    : `${remainingCount} Wörter fehlen · Klicke in der richtigen Reihenfolge`;
+}
+
+function setStatus(message, tone = 'neutral', sticky = false) {
+  const statusEl = document.getElementById('status');
+  clearTimeout(statusTimeout);
+  statusEl.textContent = message;
+  statusEl.dataset.tone = tone;
+
+  if (!sticky) {
+    statusTimeout = setTimeout(() => {
+      statusEl.textContent = getRoundStatus();
+      statusEl.dataset.tone = 'neutral';
+    }, 1100);
+  }
+}
+
+function pulseChoice(el, className, duration = 450) {
+  el.classList.remove(className);
+  void el.offsetWidth;
+  el.classList.add(className);
+  setTimeout(() => el.classList.remove(className), duration);
 }
 
 function startTimer(seconds, onDone) {
@@ -432,9 +653,10 @@ function startTimer(seconds, onDone) {
 function readPhase(onDone) {
   gameActive = false;
   solvedIds.clear();
+  usedChoiceIds.clear();
   clickOrder = [];
   document.getElementById('choices-area').innerHTML = '';
-  document.getElementById('status').textContent = 'Lies das Gedicht …';
+  setStatus('Lies das Gedicht …', 'neutral', true);
   document.getElementById('timer').style.display = 'none';
 
   // Temporarily reveal everything
@@ -468,33 +690,40 @@ function launchRound() {
   gameActive    = true;
   clickOrder    = [];
   solvedIds.clear();
+  usedChoiceIds.clear();
 
   document.getElementById('round-badge').style.opacity = '1';
   document.getElementById('round-num').textContent = round;
-
-  const fadedCount = fadedIds.size;
-  document.getElementById('status').textContent =
-    fadedCount === 1
-      ? 'Welches Wort fehlt?'
-      : `${fadedCount} Wörter fehlen · Klicke in der richtigen Reihenfolge`;
 
   expectedOrder = [...fadedIds].sort((a, b) => a - b);
 
   renderPoem();
   renderChoices(expectedOrder);
+  setStatus(getRoundStatus(), 'neutral', true);
 }
 
 function onChoiceClick(wid, el) {
   if (!gameActive) return;
 
   const expectedId = expectedOrder[clickOrder.length];
-  el.classList.add('used'); // fade it out visually
-  const wordEl = document.getElementById('word-' + wid);
+  const choiceWord = getWordById(wid);
+  const expectedWord = getWordById(expectedId);
 
-  if (wid === expectedId) {
+  if (usedChoiceIds.has(wid)) {
+    pulseChoice(el, 'already-used');
+    setStatus('Dieses Wort hast du schon gesetzt.', 'used');
+    return;
+  }
+
+  const wordEl = document.getElementById('word-' + expectedId);
+
+  if (choiceWord.text === expectedWord.text) {
     // ✅ Correct
-    clickOrder.push(wid);
-    solvedIds.add(wid);
+    usedChoiceIds.add(wid);
+    clickOrder.push(expectedId);
+    solvedIds.add(expectedId);
+    el.classList.add('used', 'correct');
+    setTimeout(() => el.classList.remove('correct'), 600);
 
     if (wordEl) {
       wordEl.classList.remove('faded', 'faded-blank');
@@ -505,7 +734,7 @@ function onChoiceClick(wid, el) {
     if (clickOrder.length === expectedOrder.length) {
       // Round complete
       gameActive = false;
-      document.getElementById('status').textContent = '✓ Richtig!';
+      setStatus('Perfekt.', 'correct', true);
 
       if (fadedIds.size === allWords.length) {
         // Final round done — win!
@@ -514,20 +743,22 @@ function onChoiceClick(wid, el) {
         // Go directly into next round, no reading pause
         setTimeout(() => startNextRound(), 900);
       }
+    } else {
+      setStatus('Richtig.', 'correct');
     }
 
   } else {
     // ❌ Wrong
+    pulseChoice(el, 'wrong');
+    setStatus('Nicht ganz.', 'wrong', true);
     if (wordEl) {
       wordEl.classList.add('wrong-flash');
       setTimeout(() => wordEl.classList.remove('wrong-flash'), 600);
     }
     gameActive = false;
 
-    const wrongW  = allWords.find(x => x.id === wid);
-    const expectW = allWords.find(x => x.id === expectedId);
     document.getElementById('fail-msg').textContent =
-      `Du hast „${wrongW.text}" gewählt, aber „${expectW.text}" wurde zuerst erwartet.`;
+      `Du hast „${choiceWord.text}“ gewählt, aber „${expectedWord.text}“ wurde zuerst erwartet.`;
 
     setTimeout(showFail, 700);
   }
@@ -558,9 +789,12 @@ function fullRestart() {
   document.getElementById('overlay-win').classList.remove('active');
   document.getElementById('overlay-fail').classList.remove('active');
   clearInterval(timerInterval);
+  clearTimeout(statusTimeout);
 
   fadedIds.clear();
   savedFadedIds.clear();
+  solvedIds.clear();
+  usedChoiceIds.clear();
   round      = 0;
   savedRound = 0;
   document.getElementById('round-badge').style.opacity = '0';
@@ -569,8 +803,21 @@ function fullRestart() {
   readPhase(() => startNextRound());
 }
 
-buildWords();
-readPhase(() => startNextRound());
+async function initializeGame() {
+  try {
+    setStatus('Gedicht wird geladen …', 'neutral', true);
+    const poems = await loadPoems();
+    currentPoem = pickDailyPoem(poems);
+    poemLines = [...currentPoem.lines];
+    renderPoemMeta();
+    fullRestart();
+  } catch (error) {
+    console.error(error);
+    showLoadError();
+  }
+}
+
+initializeGame();
 </script>
 </body>
 </html>
