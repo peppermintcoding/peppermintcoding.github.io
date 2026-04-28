@@ -328,11 +328,6 @@
     line-height: 1.6;
   }
 
-  .overlay .ornament {
-    font-size: 34px;
-    color: var(--sepia-light);
-  }
-
   .btn {
     margin-top: 8px;
     padding: 10px 32px;
@@ -415,14 +410,12 @@
   <div id="choices-area"></div>
 
   <div class="overlay" id="overlay-win">
-    <div class="ornament">✦</div>
     <h2>Wow!</h2>
-    <p>Du hast dir das ganze Gedicht gemerkt.<br>Erzähl es jemanden, den du liebst.</p>
+    <p>Du hast dir das ganze Gedicht gemerkt!<br>Erzähl es jemanden, den du liebst.</p>
     <button class="btn" onclick="fullRestart()">Nochmal von vorne</button>
   </div>
 
   <div class="overlay" id="overlay-fail">
-    <div class="ornament">✦</div>
     <h2>Hmmm …</h2>
     <p id="fail-msg">Fast, aber nicht ganz.</p>
     <button class="btn" onclick="retryRound()">Nochmal versuchen</button>
@@ -606,7 +599,7 @@ function getRoundStatus() {
   const remainingCount = Math.max(expectedOrder.length - clickOrder.length, 0) || fadedIds.size;
   return remainingCount === 1
     ? 'Welches Wort fehlt?'
-    : `${remainingCount} Wörter fehlen · Klicke in der richtigen Reihenfolge`;
+    : `${remainingCount} Wörter fehlen noch..`;
 }
 
 function setStatus(message, tone = 'neutral', sticky = false) {
@@ -711,7 +704,7 @@ function onChoiceClick(wid, el) {
 
   if (usedChoiceIds.has(wid)) {
     pulseChoice(el, 'already-used');
-    setStatus('Dieses Wort hast du schon gesetzt.', 'used');
+    setStatus('Dieses Wort hast du schon benutzt.', 'used');
     return;
   }
 
@@ -758,7 +751,7 @@ function onChoiceClick(wid, el) {
     gameActive = false;
 
     document.getElementById('fail-msg').textContent =
-      `Du hast „${choiceWord.text}“ gewählt, aber „${expectedWord.text}“ wurde zuerst erwartet.`;
+      `Du hast „${choiceWord.text}“ gewählt, aber „${expectedWord.text}“ wäre richtig gewesen.`;
 
     setTimeout(showFail, 700);
   }
